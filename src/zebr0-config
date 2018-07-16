@@ -1,0 +1,27 @@
+#!/usr/bin/python3 -u
+
+import argparse
+import configparser
+import subprocess
+
+import zebr0lib.config
+
+
+def edit(filename):
+    parser = configparser.ConfigParser()
+    parser["config"] = {
+        "base_url": zebr0lib.config.base_url
+    }
+
+    with open(filename, "w") as file:
+        parser.write(file)
+    subprocess.call(["/usr/bin/editor", filename])
+
+
+if __name__ == "__main__":
+    argparser = argparse.ArgumentParser(description="")
+    argparser.add_argument("filename", nargs="?", default=zebr0lib.config.DEFAULT_PATH, help="")
+
+    args = argparser.parse_args()
+
+    edit(args.filename)
