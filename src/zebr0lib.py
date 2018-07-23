@@ -7,12 +7,16 @@ import requests
 DEFAULT_FILENAME = "zebr0.ini"
 DEFAULT_PATH = "/etc/" + DEFAULT_FILENAME
 
+# constants for the configuration file
+CONFIG = "config"
+BASE_URL = "base_url"
+
 # reads the content of the configuration file
 _parser = configparser.ConfigParser()
 _parser.read([DEFAULT_PATH, DEFAULT_FILENAME])  # you can override the values with a file with the same name in the current directory
 
 # keys to look for in the configuration file, with the default value if absent or if the configuration file doesn't exist
-base_url = _parser.get("config", "base_url", fallback="https://raw.githubusercontent.com/zebr0/zebr0-config/master")
+base_url = _parser.get(CONFIG, BASE_URL, fallback="https://raw.githubusercontent.com/zebr0/zebr0-config/master")
 
 
 class Config:
@@ -31,7 +35,7 @@ class Config:
 
         # initializes the logger
         self._logger = logging.getLogger(__name__)
-        self._logger.info("base_url: %s", base_url)
+        self._logger.info("base url: %s", base_url)
         self._logger.info("project: %s", project)
         self._logger.info("stage: %s", stage)
 
