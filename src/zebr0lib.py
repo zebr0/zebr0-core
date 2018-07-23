@@ -4,7 +4,7 @@ import logging
 import requests
 
 # default name and location of the zebr0 configuration file, common to most zebr0 programs
-DEFAULT_FILENAME = "zebr0.conf"
+DEFAULT_FILENAME = "zebr0.ini"
 DEFAULT_PATH = "/etc/" + DEFAULT_FILENAME
 
 # reads the content of the configuration file
