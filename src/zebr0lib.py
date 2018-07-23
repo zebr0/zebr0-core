@@ -15,7 +15,7 @@ _parser.read([DEFAULT_PATH, DEFAULT_FILENAME])  # you can override the values wi
 base_url = _parser.get("config", "base_url", fallback="https://raw.githubusercontent.com/zebr0/zebr0-config/master")
 
 
-class Service:
+class Config:
     """
     Configuration service.
 
