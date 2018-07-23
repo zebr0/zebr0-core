@@ -10,7 +10,8 @@ import zebr0lib
 def edit(filename):
     parser = configparser.ConfigParser()
     parser[zebr0lib.CONFIG] = {
-        zebr0lib.BASE_URL: zebr0lib.base_url
+        zebr0lib.BASE_URL: zebr0lib.base_url,
+        zebr0lib.LOG_FORMAT: zebr0lib.log_format
     }
 
     with open(filename, "w") as file:

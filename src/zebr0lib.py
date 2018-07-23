@@ -1,5 +1,6 @@
 import configparser
 import logging
+import sys
 
 import requests
 
@@ -10,6 +11,7 @@ DEFAULT_PATH = "/etc/" + DEFAULT_FILENAME
 # constants for the configuration file
 CONFIG = "config"
 BASE_URL = "base_url"
+LOG_FORMAT = "log_format"
 
 # reads the content of the configuration file
 _parser = configparser.ConfigParser()
@@ -17,6 +19,7 @@ _parser.read([DEFAULT_PATH, DEFAULT_FILENAME])  # you can override the values wi
 
 # keys to look for in the configuration file, with the default value if absent or if the configuration file doesn't exist
 base_url = _parser.get(CONFIG, BASE_URL, fallback="https://raw.githubusercontent.com/zebr0/zebr0-config/master")
+log_format = _parser.get(CONFIG, LOG_FORMAT, fallback="{asctime} | {levelname:<7.7} | {name:<25.25} | {message}")
 
 
 class Config:
@@ -68,3 +71,20 @@ class Config:
 
         # if not, raises an error
         raise LookupError("key '{}' not found anywhere for project '{}', stage '{}' in '{}'".format(key, self.project, self.stage, base_url))
+
+
+def setup_logs(debug=False):
+    """
+    Helper function to configure the root logger of zebr0 command-line programs
+
+    :param debug: whether or not to show debug log entries (defaults to False)
+    """
+
+    # logs will be written to stderr (since most zebr0 command-line programs are pipes that read from stdin and write to stdout)
+    stream_handler = logging.StreamHandler(sys.stderr)
+    stream_handler.setFormatter(logging.Formatter(log_format, style="{"))
+
+    # configures the root logger
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG if debug else logging.INFO)
+    root_logger.addHandler(stream_handler)
