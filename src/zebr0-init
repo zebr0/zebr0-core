@@ -1,0 +1,16 @@
+#!/usr/bin/python3 -u
+
+import os.path
+
+import zebr0
+
+if __name__ == "__main__":
+    argparser = zebr0.ArgumentParser()
+    args = argparser.parse_args()
+
+    if not os.path.exists(args.directory):
+        os.makedirs(args.directory)
+
+    for parameter in ["url", "project", "stage"]:
+        with open(args.directory + "/" + parameter, "w") as file:
+            file.write(getattr(args, parameter))
