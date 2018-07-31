@@ -1,0 +1,13 @@
+#!/usr/bin/python3 -u
+
+import sys
+
+import zebr0
+
+if __name__ == "__main__":
+    argparser = zebr0.ArgumentParser()
+    argparser.add_argument("key")
+    args = argparser.parse_args()
+
+    zebr0_service = zebr0.Service(args)
+    sys.stdout.write(zebr0_service.lookup(args.key))
