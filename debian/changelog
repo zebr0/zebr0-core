@@ -1,3 +1,9 @@
+zebr0-core (0.1.1-0ubuntu1) bionic; urgency=medium
+
+  * overriding parse_known_args triggers some weird behavior when subparsers are involved, so we override parse_args instead
+
+ -- Thomas JOUANNOT (Mazerty) <mazerty@gmail.com>  Fri, 03 Aug 2018 13:25:00 +0100
+
 zebr0-core (0.1.0-0ubuntu2) bionic; urgency=medium
 
   * forgot to add the dependency to python3-requests

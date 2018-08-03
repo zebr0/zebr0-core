@@ -18,33 +18,33 @@ class ArgumentParser(argparse.ArgumentParser):
 
         self._logger = logging.getLogger(__name__ + "." + __class__.__name__)
 
-    def parse_known_args(self, *args, **kwargs):
-        namespace, args = super().parse_known_args(*args, **kwargs)
+    def parse_args(self, *args, **kwargs):
+        args = super().parse_args(*args, **kwargs)
 
         # logs will be written to stderr (since most zebr0 command-line programs are pipes that read from stdin and write to stdout)
         stream_handler = logging.StreamHandler(sys.stderr)
         stream_handler.setFormatter(logging.Formatter("{asctime} | {levelname:<7.7} | {name:<25.25} | {message}", style="{"))
         root_logger = logging.getLogger()
-        root_logger.setLevel(logging.DEBUG if namespace.debug else logging.INFO)
+        root_logger.setLevel(logging.DEBUG if args.debug else logging.INFO)
         root_logger.addHandler(stream_handler)
 
         missing_parameters = []
 
         for parameter in ["url", "project", "stage"]:
-            if not getattr(namespace, parameter, ""):
-                filename = namespace.directory + "/" + parameter
+            if not getattr(args, parameter, ""):
+                filename = args.directory + "/" + parameter
                 if os.path.isfile(filename):
                     with open(filename, "r") as file:
-                        setattr(namespace, parameter, file.read().strip())
+                        setattr(args, parameter, file.read().strip())
                 else:
                     missing_parameters.append(parameter)
                     continue
-            self._logger.info("%s: %s", parameter, getattr(namespace, parameter))
+            self._logger.info("%s: %s", parameter, getattr(args, parameter))
 
         if missing_parameters:
             raise Exception("missing parameters: {}".format(missing_parameters))
 
-        return namespace, args
+        return args
 
 
 class Service:
