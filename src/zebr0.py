@@ -10,7 +10,7 @@ class ArgumentParser(argparse.ArgumentParser):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.add_argument("-d", "--directory", nargs="?", default="/etc/zebr0")
+        self.add_argument("-c", "--conf", nargs="?", default="/etc/zebr0")
         self.add_argument("-u", "--url", nargs="?")
         self.add_argument("-p", "--project", nargs="?")
         self.add_argument("-s", "--stage", nargs="?")
@@ -32,7 +32,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
         for parameter in ["url", "project", "stage"]:
             if not getattr(args, parameter, ""):
-                filename = args.directory + "/" + parameter
+                filename = os.path.join(args.conf, parameter)
                 if os.path.isfile(filename):
                     with open(filename, "r") as file:
                         setattr(args, parameter, file.read().strip())

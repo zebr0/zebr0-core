@@ -8,9 +8,9 @@ if __name__ == "__main__":
     argparser = zebr0.ArgumentParser()
     args = argparser.parse_args()
 
-    if not os.path.exists(args.directory):
-        os.makedirs(args.directory)
+    if not os.path.exists(args.conf):
+        os.makedirs(args.conf)
 
     for parameter in ["url", "project", "stage"]:
-        with open(args.directory + "/" + parameter, "w") as file:
+        with open(os.path.join(args.conf, parameter), "w") as file:
             file.write(getattr(args, parameter))
