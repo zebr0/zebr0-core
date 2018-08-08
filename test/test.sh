@@ -17,7 +17,7 @@ diff tmp/stage results/stage
 
 # third test: fetching the value of a key from the remote repository
 ../src/zebr0-lookup -c tmp LICENSE > tmp/LICENSE
-diff tmp/LICENSE results/LICENSE
+diff tmp/LICENSE ../LICENSE
 
 # cleans tmp directory
 rm -rf tmp
