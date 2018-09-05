@@ -59,23 +59,24 @@ class Service:
         # initializes the logger
         self._logger = logging.getLogger(__name__ + "." + __class__.__name__)
 
-    def lookup(self, key, strip=True):
+    def lookup(self, key, strip=True, strict=True):
         """
         Looks for the value of the given key in the remote repository.
         The value is then stored in a local cache to speed up subsequent calls.
 
         :param key: key to look for
         :param strip: whether to strip the value off leading and trailing whitespaces or not
-        :return: value of the given key in the remote repository
+        :param strict: if true, raises an exception when the given key does not exist
+        :return: value of the given key in the remote repository or None if the key doesn't exist and strict mode is off
         """
 
         if not self._cache.get(key):
             # if the key isn't cached, looks for it in the remote repository, then stores it
-            self._cache[key] = self._remote_lookup(key, strip)
+            self._cache[key] = self._remote_lookup(key, strip, strict)
 
         return self._cache.get(key)
 
-    def _remote_lookup(self, key, strip):
+    def _remote_lookup(self, key, strip, strict):
         self._logger.info("looking for key '%s' in remote repository", key)
 
         # first it will look for the key at the most specific level: url/project/stage
@@ -87,5 +88,10 @@ class Service:
             if response.ok:
                 return response.text.strip() if strip else response.text
 
-        # if not, raises an error
-        raise LookupError("key '{}' not found anywhere for project '{}', stage '{}' in '{}'".format(key, self.project, self.stage, self.url))
+        # if not, either raises an error or returns None
+        msg = "key '{}' not found anywhere for project '{}', stage '{}' in '{}'".format(key, self.project, self.stage, self.url)
+        if strict:
+            raise LookupError(msg)
+        else:
+            self._logger.info(msg)
+            return None

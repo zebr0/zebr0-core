@@ -1,5 +1,8 @@
 #!/bin/sh -ex
 
+# cleans a potentially failed previous test run
+[ -d tmp/ ] && rm -rf tmp/
+
 # creates tmp directory
 mkdir tmp
 
@@ -18,6 +21,9 @@ diff tmp/stage results/stage
 # third test: fetching the value of a key from the remote repository
 ../src/zebr0-lookup -c tmp LICENSE > tmp/LICENSE
 diff tmp/LICENSE ../LICENSE
+
+# fourth test: lenient mode, doesn't fail when the key doesn't exist
+../src/zebr0-lookup -c tmp unknown-key --lenient
 
 # cleans tmp directory
 rm -rf tmp
