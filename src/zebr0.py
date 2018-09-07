@@ -93,5 +93,5 @@ class Service:
         if strict:
             raise LookupError(msg)
         else:
-            self._logger.info(msg)
+            self._logger.warning(msg)
             return None
