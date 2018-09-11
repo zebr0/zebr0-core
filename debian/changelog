@@ -1,3 +1,9 @@
+zebr0-core (0.5.0-0ubuntu1) bionic; urgency=medium
+
+  * reverted the last version
+
+ -- Thomas JOUANNOT (Mazerty) <mazerty@gmail.com>  Wed, 11 Sep 2018 11:15:00 +0100
+
 zebr0-core (0.4.0-0ubuntu1) bionic; urgency=medium
 
   * added strict mode to core library, and related lenient mode to zebr0-lookup
