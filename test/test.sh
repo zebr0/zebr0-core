@@ -22,8 +22,5 @@ diff tmp/stage results/stage
 ../src/zebr0-lookup -c tmp LICENSE > tmp/LICENSE
 diff tmp/LICENSE ../LICENSE
 
-# fourth test: lenient mode, doesn't fail when the key doesn't exist
-../src/zebr0-lookup -c tmp unknown-key --lenient
-
 # cleans tmp directory
 rm -rf tmp
