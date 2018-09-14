@@ -10,11 +10,11 @@ class ArgumentParser(argparse.ArgumentParser):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.add_argument("-c", "--conf", nargs="?", default="/etc/zebr0")
-        self.add_argument("-u", "--url", nargs="?")
-        self.add_argument("-p", "--project", nargs="?")
-        self.add_argument("-s", "--stage", nargs="?")
-        self.add_argument("--debug", action="store_true")
+        self.add_argument("-c", "--conf", default="/etc/zebr0", help="local zebr0 settings directory (default: /etc/zebr0)")
+        self.add_argument("-u", "--url", help="url to the remote zebr0 configuration (root level)")
+        self.add_argument("-p", "--project", help="project name (first level)")
+        self.add_argument("-s", "--stage", help="stage name (second level)")
+        self.add_argument("--debug", action="store_true", help="debug level for logs")
 
         self._logger = logging.getLogger(__name__ + "." + __class__.__name__)
 
