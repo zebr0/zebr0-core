@@ -7,5 +7,5 @@ Standards-Version: 3.9.7
 
 Package: zebr0-core
 Architecture: all
-Depends: ${misc:Depends}, python3, python3-requests
+Depends: ${misc:Depends}, python3, python3-requests, python3-jinja2
 Description: Python 3 shared library for zebr0 command-line programs

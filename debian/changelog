@@ -1,3 +1,9 @@
+zebr0-core (0.6.0-0ubuntu1) bionic; urgency=medium
+
+  * merged zebr0-template with zebr0-core: now the templating occurs by default in the lookup, that allows for values to reference zebr0 variables or the defined filters
+
+ -- Thomas JOUANNOT (Mazerty) <mazerty@gmail.com>  Wed, 24 Sep 2018 10:50:00 +0100
+
 zebr0-core (0.5.0-0ubuntu1) bionic; urgency=medium
 
   * reverted the last version

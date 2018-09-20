@@ -7,8 +7,10 @@ import zebr0
 if __name__ == "__main__":
     argparser = zebr0.ArgumentParser()
     argparser.add_argument("key")
+    argparser.add_argument("-d", "--default")
+    argparser.add_argument("--render", action="store_true")
     argparser.add_argument("--strip", action="store_true")
     args = argparser.parse_args()
 
     zebr0_service = zebr0.Service(args)
-    sys.stdout.write(zebr0_service.lookup(args.key, args.strip))
+    sys.stdout.write(zebr0_service.lookup(args.key, args.default, args.render, args.strip))
