@@ -65,7 +65,7 @@ class Service:
         self.project = args.project
         self.stage = args.stage
 
-        # sets up the template environment
+        # sets up jinja's template environment
         self.environment = jinja2.Environment(keep_trailing_newline=True)
         self.environment.globals["url"] = args.url
         self.environment.globals["project"] = args.project
@@ -109,7 +109,7 @@ class Service:
                      [self.url, key]]:
             response = requests.get("/".join(path))
             if response.ok:
-                value = response.text if not render else self.environment.from_string(response.text).render()
+                value = response.text if not render else self.render(response.text)
                 return value if not strip else value.strip()
 
         # if not, returns the default value is specified, else raises an error
@@ -117,3 +117,12 @@ class Service:
             return default
         else:
             raise LookupError("key '{}' not found anywhere for project '{}', stage '{}' in '{}'".format(key, self.project, self.stage, self.url))
+
+    def render(self, template):
+        """
+        Renders the given template through jinja's configured environment
+
+        :param template: template string
+        :return: rendered template string
+        """
+        return self.environment.from_string(template).render()

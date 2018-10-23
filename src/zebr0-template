@@ -1,0 +1,9 @@
+#!/usr/bin/python3 -u
+
+import sys
+
+import zebr0
+
+if __name__ == "__main__":
+    zebr0_service = zebr0.Service(zebr0.ArgumentParser().parse_args())
+    sys.stdout.write(zebr0_service.render(sys.stdin.read()))

@@ -70,6 +70,10 @@ diff tmp/default results/default
 ../src/zebr0-lookup -c tmp default --render > tmp/default2
 diff tmp/default2 results/default
 
+# zebr0-template test
+cat mock/test-key | ../src/zebr0-template -c tmp > tmp/template
+diff tmp/template results/template
+
 # stops the mock server
 kill $(cat tmp/pid) && rm tmp/pid
 
