@@ -4,7 +4,6 @@ import json
 import logging
 import os.path
 import subprocess
-import sys
 
 import jinja2
 import requests
@@ -25,12 +24,11 @@ class ArgumentParser(argparse.ArgumentParser):
     def parse_args(self, *args, **kwargs):
         args = super().parse_args(*args, **kwargs)
 
-        # logs will be written to stderr (since most zebr0 command-line programs are pipes that read from stdin and write to stdout)
-        stream_handler = logging.StreamHandler(sys.stderr)
-        stream_handler.setFormatter(logging.Formatter("{asctime} | {levelname:<7.7} | {name:<25.25} | {message}", style="{"))
-        root_logger = logging.getLogger()
-        root_logger.setLevel(logging.DEBUG if args.debug else logging.INFO)
-        root_logger.addHandler(stream_handler)
+        logging.basicConfig(
+            format="{asctime} | {levelname:<7.7} | {name:<25.25} | {message}",
+            style="{",
+            level=logging.DEBUG if args.debug else logging.INFO
+        )
 
         missing_parameters = []
 
