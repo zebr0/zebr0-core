@@ -1,3 +1,9 @@
+zebr0-core (0.8.0-0ubuntu1) bionic; urgency=medium
+
+  * added a 4th parameter, vm, to store what kind of vm platform the host is currently running on
+
+ -- Thomas JOUANNOT (Mazerty) <mazerty@gmail.com>  Wed, 04 May 2019 17:35:00 +0100
+
 zebr0-core (0.7.0-0ubuntu1) bionic; urgency=medium
 
   * also ported the zebr0-template executable, so that you can also render via stdin

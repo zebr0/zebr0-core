@@ -17,6 +17,7 @@ class ArgumentParser(argparse.ArgumentParser):
         self.add_argument("-u", "--url", help="url to the remote zebr0 configuration (root level)")
         self.add_argument("-p", "--project", help="project name (first level)")
         self.add_argument("-s", "--stage", help="stage name (second level)")
+        self.add_argument("-v", "--vm", help="vm platform on which the host is running")
         self.add_argument("--debug", action="store_true", help="debug level for logs")
 
         self._logger = logging.getLogger(__name__ + "." + __class__.__name__)
@@ -32,7 +33,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
         missing_parameters = []
 
-        for parameter in ["url", "project", "stage"]:
+        for parameter in ["url", "project", "stage", "vm"]:
             if not getattr(args, parameter, ""):
                 filename = os.path.join(args.conf, parameter)
                 if os.path.isfile(filename):
@@ -62,12 +63,14 @@ class Service:
         self.url = args.url
         self.project = args.project
         self.stage = args.stage
+        self.vm = args.vm
 
         # sets up jinja's template environment
         self.environment = jinja2.Environment(keep_trailing_newline=True)
         self.environment.globals["url"] = args.url
         self.environment.globals["project"] = args.project
         self.environment.globals["stage"] = args.stage
+        self.environment.globals["vm"] = args.vm
         self.environment.filters["json"] = json.loads
         self.environment.filters["lookup"] = self.lookup
         self.environment.filters["sh"] = sh
