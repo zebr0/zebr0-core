@@ -15,18 +15,16 @@ sleep 1
 cd ..
 
 # zebr0-init test 1: creating the parameter files
-../src/zebr0-init -c tmp -u http://localhost:8000 -p dummy_project -s dummy_stage -v none
+../src/zebr0-init -c tmp -u http://localhost:8000 -p dummy_project -s dummy_stage
 diff tmp/url results/url
 diff tmp/project results/project
 diff tmp/stage results/stage
-diff tmp/vm results/vm
 
 # zebr0-init test 2: idempotence when reading from the parameter files
 ../src/zebr0-init -c tmp
 diff tmp/url results/url
 diff tmp/project results/project
 diff tmp/stage results/stage
-diff tmp/vm results/vm
 
 # lookup test 1: fetching the value of a key from the remote repository
 ../src/zebr0-lookup -c tmp test-key > tmp/test-key
