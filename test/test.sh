@@ -1,7 +1,7 @@
 #!/bin/sh -ex
 
 # cleans a potentially failed previous test run
-[ -f tmp/pid ] && kill $(cat tmp/pid)
+[ -f tmp/pid ] && kill "$(cat tmp/pid)"
 [ -d tmp/ ] && rm -rf tmp/
 
 # creates tmp directory
@@ -71,11 +71,11 @@ diff tmp/default results/default
 diff tmp/default2 results/default
 
 # zebr0-template test
-cat mock/test-key | ../src/zebr0-template -c tmp > tmp/template
+../src/zebr0-template -c tmp < mock/test-key > tmp/template
 diff tmp/template results/template
 
 # stops the mock server
-kill $(cat tmp/pid) && rm tmp/pid
+kill "$(cat tmp/pid)" && rm tmp/pid
 
 # cleans tmp directory
 rm -rf tmp
