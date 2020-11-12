@@ -1,1 +1,1 @@
-{{ "test-key" | lookup }}
+{{ "test-key" | get }}

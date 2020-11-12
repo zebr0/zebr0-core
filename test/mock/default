@@ -1,1 +1,1 @@
-{{ "unknown-key" | lookup("default value") }}
+{{ "unknown-key" | get("default value") }}
