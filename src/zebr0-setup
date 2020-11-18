@@ -1,0 +1,16 @@
+#!/usr/bin/python3 -u
+
+import sys
+
+import zebr0
+
+argparser = zebr0.ArgumentParser()
+argparser.add_argument("-t", "--test", help="")
+args = argparser.parse_args()
+
+client = zebr0.Client(args.url, args.levels)
+client.save_configuration(args.configuration_file)
+
+if args.test:
+    client = zebr0.Client(configuration_file=args.configuration_file)
+    sys.stdout.write(client.get(args.test))

@@ -1,81 +1,143 @@
+from __future__ import annotations
+
 import argparse
-import logging
-import os.path
+import http.server
+import json
+import pathlib
+import threading
+from typing import List, Optional
 
 import jinja2
 import requests
 
+ENCODING = "utf-8"
+
+URL = "url"
+LEVELS = "levels"
+
+URL_DEFAULT = "https://zebr0.mazerty.fr"
+LEVELS_DEFAULT = []
+CONFIGURATION_FILE_DEFAULT = "/etc/zebr0.conf"
+
 
 class Client:
-    def __init__(self, args):
-        self.url = args.url
-        self.project = args.project
-        self.stage = args.stage
+    def __init__(self, url: str = "", levels: Optional[List[str]] = None, configuration_file: str = CONFIGURATION_FILE_DEFAULT) -> None:
+        # first set default values
+        self.url = URL_DEFAULT
+        self.levels = LEVELS_DEFAULT
 
-        # sets up jinja's template environment
-        self.environment = jinja2.Environment(keep_trailing_newline=True)
-        self.environment.globals["url"] = args.url
-        self.environment.globals["project"] = args.project
-        self.environment.globals["stage"] = args.stage
-        self.environment.filters["get"] = self.get
+        # then override with the configuration file if present
+        try:
+            configuration_string = pathlib.Path(configuration_file).read_text(ENCODING)
+            configuration = json.loads(configuration_string)
 
-    def get(self, key, default=None, render=True, strip=True):
-        """
-        Looks for the value of the given key in the remote repository.
-        The value is then stored in a local cache to speed up subsequent calls.
+            self.url = configuration.get(URL, URL_DEFAULT)
+            self.levels = configuration.get(LEVELS, LEVELS_DEFAULT)
+        except OSError:
+            pass  # configuration file not found, ignored
 
-        :param key: key to look for
-        :param default: if specified, returns this value instead of raising an error if the key isn't found
-        :param render: whether to render through jinja2 the content of the value or not
-        :param strip: whether to strip the value off leading and trailing whitespaces or not
-        :return: value of the given key in the remote repository
-        """
+        # finally override with the parameters if present
+        if url:
+            self.url = url
+        if levels:
+            self.levels = levels
 
-        # first it will look for the key at the most specific level: url/project/stage
-        # if it fails, it will try less specific urls until the key is found
-        for path in [[self.url, self.project, self.stage, key],
-                     [self.url, self.project, key],
-                     [self.url, key]]:
-            response = requests.get("/".join(path))
+        # and set up templating
+        self.jinja_environment = jinja2.Environment(keep_trailing_newline=True)
+        self.jinja_environment.globals[URL] = self.url
+        self.jinja_environment.globals[LEVELS] = self.levels
+        self.jinja_environment.filters["get"] = self.get
+
+    def get(self, key: str, default: str = "", render: bool = True, strip: bool = True) -> str:
+        # let's do this with a nice recursive function :)
+        def fetch(levels):
+            full_url = "/".join([self.url] + levels + [key])
+            response = requests.get(full_url)
+
             if response.ok:
-                value = response.text if not render else self.environment.from_string(response.text).render()
-                return value if not strip else value.strip()
+                return response.text  # if the key is found, we return the value
+            elif levels:
+                return fetch(levels[:-1])  # if not, we try at the parent level
+            else:
+                return default  # if we're at the top level, the key just doesn't exist, we return the default value
 
-        # if not, returns the default value is specified, else raises an error
-        if default:
-            return default
-        else:
-            raise LookupError("key '{}' not found anywhere for project '{}', stage '{}' in '{}'".format(key, self.project, self.stage, self.url))
+        value = fetch(self.levels)  # let's try at the deepest level first
+
+        value = self.jinja_environment.from_string(value).render() if render else value  # templating
+        value = value.strip() if strip else value  # stripping
+
+        return value
+
+    def save_configuration(self, configuration_file: str = CONFIGURATION_FILE_DEFAULT) -> None:
+        configuration = {URL: self.url, LEVELS: self.levels}
+        configuration_string = json.dumps(configuration)
+        pathlib.Path(configuration_file).write_text(configuration_string, ENCODING)
+
+
+class TestServer:
+    """
+    Rudimentary key-value HTTP server, for development or testing purposes only.
+    The keys and their values are stored in a dictionary, that can be defined either in the constructor or through the "data" attribute.
+
+    Basic usage:
+
+    >>> server = TestServer({"key": "value", ...})
+    >>> server.start()
+    >>> ...
+    >>> server.stop()
+
+    Or as a context manager, in which case the server will be started automatically, then stopped at the end of the "with" block:
+
+    >>> with TestServer() as server:
+    >>>    server.data = {"key": "value", ...}
+    >>>    ...
+
+    :param data: the keys and their values stored in a dictionary, defaults to an empty dictionary
+    :param address: the address the server will be listening to, defaults to 127.0.0.1
+    :param port: the port the server will be listening to, defaults to 8000
+    """
+
+    def __init__(self, data: dict = None, address: str = "127.0.0.1", port: int = 8000) -> None:
+        self.data = data or {}
+
+        class RequestHandler(http.server.BaseHTTPRequestHandler):
+            def do_GET(zelf):
+                key = zelf.path[1:]  # the key is the request's path, minus the leading "/"
+                value = self.data.get(key)
+
+                if value:  # standard HTTP behavior
+                    zelf.send_response(200)
+                    zelf.end_headers()
+                    zelf.wfile.write(str(value).encode(ENCODING))
+                else:
+                    zelf.send_response(404)
+                    zelf.end_headers()
+
+        self.server = http.server.ThreadingHTTPServer((address, port), RequestHandler)
+
+    def start(self) -> None:
+        """ Starts the server in a separate thread. """
+        threading.Thread(target=self.server.serve_forever).start()
+
+    def stop(self) -> None:
+        """ Stops the server. """
+        self.server.shutdown()
+        self.server.server_close()
+
+    def __enter__(self) -> TestServer:
+        """ When used as a context manager, starts the server at the beginning of the "with" block. """
+        self.start()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        """ When used as a context manager, stops the server at the end of the "with" block. """
+        self.stop()
 
 
 class ArgumentParser(argparse.ArgumentParser):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.add_argument("-c", "--conf", default="/etc/zebr0", help="local zebr0 settings directory (default: /etc/zebr0)")
-        self.add_argument("-u", "--url", help="url to the remote zebr0 configuration (root level)")
-        self.add_argument("-p", "--project", help="project name (first level)")
-        self.add_argument("-s", "--stage", help="stage name (second level)")
-
-        self._logger = logging.getLogger(__name__ + "." + __class__.__name__)
-
-    def parse_args(self, *args, **kwargs):
-        args = super().parse_args(*args, **kwargs)
-
-        missing_parameters = []
-
-        for parameter in ["url", "project", "stage"]:
-            if not getattr(args, parameter, ""):
-                filename = os.path.join(args.conf, parameter)
-                if os.path.isfile(filename):
-                    with open(filename, "r") as file:
-                        setattr(args, parameter, file.read().strip())
-                else:
-                    missing_parameters.append(parameter)
-                    continue
-            self._logger.debug("%s: %s", parameter, getattr(args, parameter))
-
-        if missing_parameters:
-            raise Exception("missing parameters: {}".format(missing_parameters))
-
-        return args
+        self.add_argument("-u", "--url", default=URL_DEFAULT, help="")
+        self.add_argument("-l", "--levels", nargs="*", default=LEVELS_DEFAULT, help="")
+        self.add_argument("-c", "--configuration-file", default=CONFIGURATION_FILE_DEFAULT, help="")
