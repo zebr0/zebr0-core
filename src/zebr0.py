@@ -19,9 +19,6 @@ class Client:
         self.environment.globals["stage"] = args.stage
         self.environment.filters["get"] = self.get
 
-        # sets up a basic value cache, to avoid downloading the same value twice
-        self._cache = {}
-
     def get(self, key, default=None, render=True, strip=True):
         """
         Looks for the value of the given key in the remote repository.
@@ -34,13 +31,6 @@ class Client:
         :return: value of the given key in the remote repository
         """
 
-        if not self._cache.get(key):
-            # if the key isn't cached, looks for it in the remote repository, then stores it
-            self._cache[key] = self.fetch(key, default, render, strip)
-
-        return self._cache.get(key)
-
-    def fetch(self, key, default, render, strip):
         # first it will look for the key at the most specific level: url/project/stage
         # if it fails, it will try less specific urls until the key is found
         for path in [[self.url, self.project, self.stage, key],
@@ -48,7 +38,7 @@ class Client:
                      [self.url, key]]:
             response = requests.get("/".join(path))
             if response.ok:
-                value = response.text if not render else self.render(response.text)
+                value = response.text if not render else self.environment.from_string(response.text).render()
                 return value if not strip else value.strip()
 
         # if not, returns the default value is specified, else raises an error
@@ -56,15 +46,6 @@ class Client:
             return default
         else:
             raise LookupError("key '{}' not found anywhere for project '{}', stage '{}' in '{}'".format(key, self.project, self.stage, self.url))
-
-    def render(self, template):
-        """
-        Renders the given template through jinja's configured environment
-
-        :param template: template string
-        :return: rendered template string
-        """
-        return self.environment.from_string(template).render()
 
 
 class ArgumentParser(argparse.ArgumentParser):
