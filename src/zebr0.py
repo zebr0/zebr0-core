@@ -8,23 +8,26 @@ import threading
 from typing import List, Optional
 
 import jinja2
-import requests
+import requests_cache
 
 ENCODING = "utf-8"
 
 URL = "url"
 LEVELS = "levels"
+CACHE = "cache"
 
-URL_DEFAULT = "https://zebr0.mazerty.fr"
+URL_DEFAULT = "https://hub.zebr0.io"
 LEVELS_DEFAULT = []
+CACHE_DEFAULT = 300
 CONFIGURATION_FILE_DEFAULT = "/etc/zebr0.conf"
 
 
 class Client:
-    def __init__(self, url: str = "", levels: Optional[List[str]] = None, configuration_file: str = CONFIGURATION_FILE_DEFAULT) -> None:
+    def __init__(self, url: str = "", levels: Optional[List[str]] = None, cache: int = 0, configuration_file: str = CONFIGURATION_FILE_DEFAULT) -> None:
         # first set default values
         self.url = URL_DEFAULT
         self.levels = LEVELS_DEFAULT
+        self.cache = CACHE_DEFAULT
 
         # then override with the configuration file if present
         try:
@@ -33,6 +36,7 @@ class Client:
 
             self.url = configuration.get(URL, URL_DEFAULT)
             self.levels = configuration.get(LEVELS, LEVELS_DEFAULT)
+            self.cache = configuration.get(CACHE, CACHE_DEFAULT)
         except OSError:
             pass  # configuration file not found, ignored
 
@@ -41,18 +45,23 @@ class Client:
             self.url = url
         if levels:
             self.levels = levels
+        if cache:
+            self.cache = cache
 
-        # and set up templating
+        # templating setup
         self.jinja_environment = jinja2.Environment(keep_trailing_newline=True)
         self.jinja_environment.globals[URL] = self.url
         self.jinja_environment.globals[LEVELS] = self.levels
         self.jinja_environment.filters["get"] = self.get
 
-    def get(self, key: str, default: str = "", render: bool = True, strip: bool = True) -> str:
+        # http requests setup
+        self.http_session = requests_cache.CachedSession(backend="memory", expire_after=cache)
+
+    def get(self, key: str, default: str = "", template: bool = True, strip: bool = True) -> str:
         # let's do this with a nice recursive function :)
         def fetch(levels):
             full_url = "/".join([self.url] + levels + [key])
-            response = requests.get(full_url)
+            response = self.http_session.get(full_url)
 
             if response.ok:
                 return response.text  # if the key is found, we return the value
@@ -63,13 +72,13 @@ class Client:
 
         value = fetch(self.levels)  # let's try at the deepest level first
 
-        value = self.jinja_environment.from_string(value).render() if render else value  # templating
+        value = self.jinja_environment.from_string(value).render() if template else value  # templating
         value = value.strip() if strip else value  # stripping
 
         return value
 
     def save_configuration(self, configuration_file: str = CONFIGURATION_FILE_DEFAULT) -> None:
-        configuration = {URL: self.url, LEVELS: self.levels}
+        configuration = {URL: self.url, LEVELS: self.levels, CACHE: self.cache}
         configuration_string = json.dumps(configuration)
         pathlib.Path(configuration_file).write_text(configuration_string, ENCODING)
 
@@ -78,6 +87,7 @@ class TestServer:
     """
     Rudimentary key-value HTTP server, for development or testing purposes only.
     The keys and their values are stored in a dictionary, that can be defined either in the constructor or through the "data" attribute.
+    Access logs are also available through the "access_logs" attribute.
 
     Basic usage:
 
@@ -99,19 +109,22 @@ class TestServer:
 
     def __init__(self, data: dict = None, address: str = "127.0.0.1", port: int = 8000) -> None:
         self.data = data or {}
+        self.access_logs = []
 
         class RequestHandler(http.server.BaseHTTPRequestHandler):
             def do_GET(zelf):
                 key = zelf.path[1:]  # the key is the request's path, minus the leading "/"
                 value = self.data.get(key)
 
-                if value:  # standard HTTP behavior
+                if value:  # standard HTTP REST behavior
                     zelf.send_response(200)
                     zelf.end_headers()
                     zelf.wfile.write(str(value).encode(ENCODING))
                 else:
                     zelf.send_response(404)
                     zelf.end_headers()
+
+                self.access_logs.append(zelf.path)
 
         self.server = http.server.ThreadingHTTPServer((address, port), RequestHandler)
 
@@ -138,6 +151,7 @@ class ArgumentParser(argparse.ArgumentParser):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.add_argument("-u", "--url", default=URL_DEFAULT, help="")
-        self.add_argument("-l", "--levels", nargs="*", default=LEVELS_DEFAULT, help="")
-        self.add_argument("-c", "--configuration-file", default=CONFIGURATION_FILE_DEFAULT, help="")
+        self.add_argument("-u", "--url", default=URL_DEFAULT, help="URL of the key-value server, defaults to https://hub.zebr0.io", metavar="<url>")
+        self.add_argument("-l", "--levels", nargs="*", default=LEVELS_DEFAULT, help='levels of specialization (e.g. "mattermost production" for a <project>/<environment>/<key> structure), defaults to ""', metavar="<level>")
+        self.add_argument("-c", "--cache", type=int, default=CACHE_DEFAULT, help="in seconds, the duration of the cache of http responses, defaults to 300 seconds", metavar="<duration>")
+        self.add_argument("-f", "--configuration-file", default=CONFIGURATION_FILE_DEFAULT, help="path to the configuration file, defaults to /etc/zebr0.conf for a system-wide configuration", metavar="<path>")

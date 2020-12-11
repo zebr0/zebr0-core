@@ -2,6 +2,7 @@ import pathlib
 import tempfile
 
 import pytest
+import time
 
 import zebr0
 
@@ -15,7 +16,7 @@ def server():
 def test_default_url():
     client = zebr0.Client(configuration_file="")
 
-    assert client.get("email") == "mazerty@gmail.com"
+    assert client.get("domain-name") == "zebr0.io"
 
 
 def test_default_levels(server):
@@ -66,7 +67,7 @@ def test_basic_render(server):
     server.data = {"template": "{{ url }} {{ levels[0] }} {{ levels[1] }}"}
     client = zebr0.Client("http://127.0.0.1:8000", levels=["lorem", "ipsum"], configuration_file="")
 
-    assert client.get("template", render=False) == "{{ url }} {{ levels[0] }} {{ levels[1] }}"
+    assert client.get("template", template=False) == "{{ url }} {{ levels[0] }} {{ levels[1] }}"
     assert client.get("template") == "http://127.0.0.1:8000 lorem ipsum"
 
 
@@ -100,10 +101,32 @@ def test_render_with_default(server):
     assert client.get("template") == "default"
 
 
+def test_cache(server):
+    server.access_logs = []  # resetting server logs from previous tests
+
+    server.data = {"ping": "pong", "yin": "yang"}
+    client = zebr0.Client("http://127.0.0.1:8000", cache=1, configuration_file="")  # cache of 1 second for the purposes of the test
+
+    assert client.get("ping") == "pong"  # "pong" is now in cache for "/ping"
+    time.sleep(0.5)
+    assert client.get("yin") == "yang"  # "yang" is now in cache for "/yin"
+    time.sleep(0.1)
+    server.data = {"ping": "peng", "yin": "yeng"}  # new values, shouldn't be used until cache has expired
+    time.sleep(0.3)
+    assert client.get("ping") == "pong"  # using cache for "/ping"
+    time.sleep(0.2)
+    assert client.get("ping") == "peng"  # 1.1 second has passed, cache has expired for "/ping", now fetching the new value
+    assert client.get("yin") == "yang"  # still using cache for "/yin"
+    time.sleep(0.5)
+    assert client.get("yin") == "yeng"  # cache also has expired for "/yin", now fetching the new value
+
+    assert server.access_logs == ["/ping", "/yin", "/ping", "/yin"]
+
+
 def test_configuration_file(server):
     with tempfile.TemporaryDirectory() as tmp:
         configuration_file = tmp + "/zebr0.conf"
-        pathlib.Path(configuration_file).write_text('{"url": "http://127.0.0.1:8000", "levels": ["lorem", "ipsum"]}', zebr0.ENCODING)
+        pathlib.Path(configuration_file).write_text('{"url": "http://127.0.0.1:8000", "levels": ["lorem", "ipsum"], "cache": 1}', zebr0.ENCODING)
 
         server.data = {"lorem/ipsum/dolor": "sit amet"}
         client = zebr0.Client(configuration_file=configuration_file)
@@ -113,9 +136,9 @@ def test_configuration_file(server):
 
 def test_save_configuration():
     with tempfile.TemporaryDirectory() as tmp:
-        client = zebr0.Client("http://127.0.0.1:8000", levels=["lorem", "ipsum"], configuration_file="")
+        client = zebr0.Client("http://127.0.0.1:8000", levels=["lorem", "ipsum"], cache=1, configuration_file="")
 
         configuration_file = tmp + "/zebr0.conf"
         client.save_configuration(configuration_file)
 
-        assert pathlib.Path(configuration_file).read_text(zebr0.ENCODING) == '{"url": "http://127.0.0.1:8000", "levels": ["lorem", "ipsum"]}'
+        assert pathlib.Path(configuration_file).read_text(zebr0.ENCODING) == '{"url": "http://127.0.0.1:8000", "levels": ["lorem", "ipsum"], "cache": 1}'

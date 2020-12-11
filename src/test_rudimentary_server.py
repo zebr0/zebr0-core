@@ -61,3 +61,12 @@ def test_multiple_keys():
         assert requests.get("http://127.0.0.1:8000/lorem").text == "ipsum"
         assert requests.get("http://127.0.0.1:8000/dolor/sit").text == "amet"
         assert requests.get("http://127.0.0.1:8000/consectetur/adipiscing").text == "elit"
+
+
+def test_access_logs():
+    with zebr0.TestServer() as server:
+        requests.get("http://127.0.0.1:8000/lorem")
+        requests.get("http://127.0.0.1:8000/lorem")
+        requests.get("http://127.0.0.1:8000/dolor/sit")
+
+        assert server.access_logs == ["/lorem", "/lorem", "/dolor/sit"]

@@ -28,7 +28,7 @@ def test_with_defaults(server):
         file = pathlib.Path(tmp + "/zebr0.conf")
 
         assert run("./zebr0-setup --configuration-file {}".format(file)) == ""
-        assert file.read_text(zebr0.ENCODING) == '{"url": "https://zebr0.mazerty.fr", "levels": []}'
+        assert file.read_text(zebr0.ENCODING) == '{"url": "https://hub.zebr0.io", "levels": [], "cache": 300}'
 
 
 def test_nominal(server):
@@ -36,5 +36,5 @@ def test_nominal(server):
         server.data = {"lorem/ipsum/key": "value"}
         file = pathlib.Path(tmp + "/zebr0.conf")
 
-        assert run("./zebr0-setup --url http://localhost:8000 --levels lorem ipsum --configuration-file {} --test key".format(file)) == "value"
-        assert file.read_text(zebr0.ENCODING) == '{"url": "http://localhost:8000", "levels": ["lorem", "ipsum"]}'
+        assert run("./zebr0-setup --url http://localhost:8000 --levels lorem ipsum --cache 1 --configuration-file {} --test key".format(file)) == "value"
+        assert file.read_text(zebr0.ENCODING) == '{"url": "http://localhost:8000", "levels": ["lorem", "ipsum"], "cache": 1}'
