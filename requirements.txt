@@ -1,0 +1,8 @@
+requests-cache
+jinja2
+
+pytest
+
+setuptools
+wheel
+twine
