@@ -1,9 +1,9 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: zebr0-core
-Source: https://github.com/zebr0/zebr0-core
+Upstream-Name: zebr0
+Source: https://github.com/zebr0/zebr0.py
 
 Files: *
-Copyright: 2018 zebr0
+Copyright: 2018-2021 zebr0
 License: MIT
 
 License: MIT

@@ -1,11 +1,11 @@
-Source: zebr0-core
+Source: zebr0
 Section: libs
 Priority: optional
 Maintainer: Thomas JOUANNOT (Mazerty) <mazerty@gmail.com>
 Build-Depends: debhelper (>=10)
-Standards-Version: 3.9.7
+Standards-Version: 4.5.0
 
-Package: zebr0-core
+Package: zebr0
 Architecture: all
-Depends: ${misc:Depends}, python3, python3-requests, python3-jinja2
-Description: Python 3 shared library for zebr0 command-line programs
+Depends: ${misc:Depends}, python3, python3-requests-cache, python3-jinja2
+Description: Nested key-value system with built-in inheritance and templating, designed for configuration management and deployment

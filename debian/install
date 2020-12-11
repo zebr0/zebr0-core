@@ -1,4 +1,2 @@
-src/zebr0.py /usr/lib/python3/dist-packages
-src/zebr0-init /usr/bin
-src/zebr0-lookup /usr/bin
-src/zebr0-template /usr/bin
+zebr0/__init__.py /usr/lib/python3/dist-packages/zebr0
+zebr0-setup /usr/bin
