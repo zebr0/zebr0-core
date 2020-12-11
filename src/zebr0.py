@@ -23,6 +23,36 @@ CONFIGURATION_FILE_DEFAULT = "/etc/zebr0.conf"
 
 
 class Client:
+    """
+    Nested key-value system with built-in inheritance and templating, designed for configuration management and deployment.
+
+    This Client can connect to any key-value server that follows HTTP REST standards.
+    For now it only supports plain text responses, JSON support is in the works.
+
+    Nested keys and inheritance:
+    To fully exploit the Client, you should define a structure in the naming of your keys, like "<project>/<environment/<key>".
+    Then use the "levels" parameter of the constructor to point to a specific project and environment, like ["mattermost", "production"].
+    Finally, use the get() function to fetch a key and it will automatically look for the most specific value possible.
+    Note that you don't have to duplicate keys for each project and environment, as they can be inherited from their parent level.
+
+    Templating:
+    You can use the double-braces {{  }} in your values to benefit from the Jinja templating engine (to some extent).
+    For now you can refer to the constructor parameters {{ url }} and {{ levels[x] }} or include the value from another key {{ "another-key" | get }}.
+
+    Configuration file:
+    Client configuration can also be read from a JSON file, a simple dictionary with the "url", "levels" and "cache" keys.
+    The save_configuration() function can help you create one from an existing Client.
+    The suggested default path can be used for a system-wide configuration.
+    If provided, constructor parameters will always supercede the values from the configuration file, which in turn supercede the default values.
+
+    Note that the inheritance and templating mechanisms are performed by the client, to be as server-agnostic as possible.
+
+    :param url: URL of the key-value server, defaults to https://hub.zebr0.io
+    :param levels: levels of specialization (e.g. ["mattermost", "production"] for a <project>/<environment>/<key> structure), defaults to []
+    :param cache: in seconds, the duration of the cache of http responses, defaults to 300 seconds
+    :param configuration_file: path to the configuration file, defaults to /etc/zebr0.conf for a system-wide configuration
+    """
+
     def __init__(self, url: str = "", levels: Optional[List[str]] = None, cache: int = 0, configuration_file: str = CONFIGURATION_FILE_DEFAULT) -> None:
         # first set default values
         self.url = URL_DEFAULT
@@ -58,6 +88,18 @@ class Client:
         self.http_session = requests_cache.CachedSession(backend="memory", expire_after=cache)
 
     def get(self, key: str, default: str = "", template: bool = True, strip: bool = True) -> str:
+        """
+        Fetches the value of a provided key from the server.
+        Based on the levels defined in the Client, will return the first key found from the deepest level to the root level.
+        A default value can be provided to be returned if the key isn't found at any level.
+
+        :param key: key to look for
+        :param default: value to return if the key isn't found at any level, defaults to ""
+        :param template: shall the value be processed by the templating engine ? defaults to True
+        :param strip: shall the value be stripped off leading and trailing white spaces ? defaults to True
+        :return: the resulting value of the key
+        """
+
         # let's do this with a nice recursive function :)
         def fetch(levels):
             full_url = "/".join([self.url] + levels + [key])
@@ -78,6 +120,12 @@ class Client:
         return value
 
     def save_configuration(self, configuration_file: str = CONFIGURATION_FILE_DEFAULT) -> None:
+        """
+        Saves the Client's configuration to a JSON file.
+
+        :param configuration_file: path to the configuration file, defaults to /etc/zebr0.conf for a system-wide configuration
+        """
+
         configuration = {URL: self.url, LEVELS: self.levels, CACHE: self.cache}
         configuration_string = json.dumps(configuration)
         pathlib.Path(configuration_file).write_text(configuration_string, ENCODING)
@@ -148,6 +196,10 @@ class TestServer:
 
 
 class ArgumentParser(argparse.ArgumentParser):
+    """
+    ArgumentParser that zebr0 executables can use to share a common Client CLI syntax.
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
