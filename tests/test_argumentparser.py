@@ -6,7 +6,7 @@ import zebr0
 def test_defaults():
     argparser = zebr0.ArgumentParser()
     args = argparser.parse_args([])
-    assert args == argparse.Namespace(url="https://hub.zebr0.io", levels=[], cache=300, configuration_file="/etc/zebr0.conf")
+    assert args == argparse.Namespace(url=None, levels=None, cache=None, configuration_file="/etc/zebr0.conf")
 
 
 def test_long_parameters():

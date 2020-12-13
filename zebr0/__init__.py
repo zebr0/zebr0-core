@@ -203,7 +203,7 @@ class ArgumentParser(argparse.ArgumentParser):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.add_argument("-u", "--url", default=URL_DEFAULT, help="URL of the key-value server, defaults to https://hub.zebr0.io", metavar="<url>")
-        self.add_argument("-l", "--levels", nargs="*", default=LEVELS_DEFAULT, help='levels of specialization (e.g. "mattermost production" for a <project>/<environment>/<key> structure), defaults to ""', metavar="<level>")
-        self.add_argument("-c", "--cache", type=int, default=CACHE_DEFAULT, help="in seconds, the duration of the cache of http responses, defaults to 300 seconds", metavar="<duration>")
+        self.add_argument("-u", "--url", help="URL of the key-value server, defaults to https://hub.zebr0.io", metavar="<url>")
+        self.add_argument("-l", "--levels", nargs="*", help='levels of specialization (e.g. "mattermost production" for a <project>/<environment>/<key> structure), defaults to ""', metavar="<level>")
+        self.add_argument("-c", "--cache", type=int, help="in seconds, the duration of the cache of http responses, defaults to 300 seconds", metavar="<duration>")
         self.add_argument("-f", "--configuration-file", default=CONFIGURATION_FILE_DEFAULT, help="path to the configuration file, defaults to /etc/zebr0.conf for a system-wide configuration", metavar="<path>")
