@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="zebr0",
-    version="0.10.0",
+    version="0.11.0",
     description="Nested key-value system with built-in inheritance and templating, designed for configuration management and deployment",
     long_description="TODO",
     long_description_content_type="text/markdown",
