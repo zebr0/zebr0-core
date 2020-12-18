@@ -32,5 +32,5 @@ def test_nominal(server, tmp_path):
     server.data = {"lorem/ipsum/key": "value"}
     file = tmp_path.joinpath("zebr0.conf")
 
-    assert run(f"./zebr0-setup --url http://localhost:8000 --levels lorem ipsum --cache 1 --configuration-file {file} --test key") == "value"
+    assert run(f"./zebr0-setup --url http://localhost:8000 --levels lorem ipsum --cache 1 --configuration-file {file} --test key") == "value\n"
     assert file.read_text(zebr0.ENCODING) == '{"url": "http://localhost:8000", "levels": ["lorem", "ipsum"], "cache": 1}'

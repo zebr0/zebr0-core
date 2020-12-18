@@ -19,8 +19,6 @@ optional arguments:
                         tests the configuration by fetching a key (e.g. 'fqdn')
 """
 
-import sys
-
 import zebr0
 
 argparser = zebr0.build_argument_parser(description="Saves zebr0's configuration in a JSON file.")
@@ -34,4 +32,4 @@ client.save_configuration(args.configuration_file)
 if args.test:
     # creates a client from the configuration file, then tests the configuration
     client = zebr0.Client(configuration_file=args.configuration_file)
-    sys.stdout.write(client.get(args.test))
+    print(client.get(args.test))
