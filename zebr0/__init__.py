@@ -215,3 +215,37 @@ def build_argument_parser(*args: Any, **kwargs: Any) -> argparse.ArgumentParser:
     argparser.add_argument("-f", "--configuration-file", type=Path, default=CONFIGURATION_FILE_DEFAULT, help="path to the configuration file, defaults to /etc/zebr0.conf for a system-wide configuration", metavar="<path>")
 
     return argparser
+
+
+def main(args: Optional[List[str]] = None):
+    """
+    usage: zebr0-setup [-h] [-u <url>] [-l [<level> [<level> ...]]] [-c <duration>] [-f <path>] [-t <key>]
+
+    Saves zebr0's configuration in a JSON file.
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      -u <url>, --url <url>
+                            URL of the key-value server, defaults to https://hub.zebr0.io
+      -l [<level> [<level> ...]], --levels [<level> [<level> ...]]
+                            levels of specialization (e.g. "mattermost production" for a <project>/<environment>/<key> structure), defaults to ""
+      -c <duration>, --cache <duration>
+                            in seconds, the duration of the cache of http responses, defaults to 300 seconds
+      -f <path>, --configuration-file <path>
+                            path to the configuration file, defaults to /etc/zebr0.conf for a system-wide configuration
+      -t <key>, --test <key>
+                            tests the configuration by fetching a key (e.g. 'fqdn')
+    """
+
+    argparser = build_argument_parser(description="Saves zebr0's configuration in a JSON file.")
+    argparser.add_argument("-t", "--test", help="tests the configuration by fetching a key (e.g. 'fqdn')", metavar="<key>")
+    args = argparser.parse_args(args)
+
+    # creates a client from the given parameters, then saves the configuration
+    client = Client(args.url, args.levels, args.cache)
+    client.save_configuration(args.configuration_file)
+
+    if args.test:
+        # creates a client from the configuration file, then tests the configuration
+        client = Client(configuration_file=args.configuration_file)
+        print(client.get(args.test))
