@@ -1,4 +1,3 @@
-import tempfile
 import time
 from pathlib import Path
 
@@ -123,22 +122,20 @@ def test_cache(server):
     assert server.access_logs == ["/ping", "/yin", "/ping", "/yin"]
 
 
-def test_configuration_file(server):
-    with tempfile.TemporaryDirectory() as tmp:
-        configuration_file = Path(tmp).joinpath("zebr0.conf")
-        configuration_file.write_text('{"url": "http://127.0.0.1:8000", "levels": ["lorem", "ipsum"], "cache": 1}', zebr0.ENCODING)
+def test_configuration_file(server, tmp_path):
+    configuration_file = tmp_path.joinpath("zebr0.conf")
+    configuration_file.write_text('{"url": "http://127.0.0.1:8000", "levels": ["lorem", "ipsum"], "cache": 1}', zebr0.ENCODING)
 
-        server.data = {"lorem/ipsum/dolor": "sit amet"}
-        client = zebr0.Client(configuration_file=configuration_file)
+    server.data = {"lorem/ipsum/dolor": "sit amet"}
+    client = zebr0.Client(configuration_file=configuration_file)
 
-        assert client.get("dolor") == "sit amet"
+    assert client.get("dolor") == "sit amet"
 
 
-def test_save_configuration():
-    with tempfile.TemporaryDirectory() as tmp:
-        client = zebr0.Client("http://127.0.0.1:8000", levels=["lorem", "ipsum"], cache=1, configuration_file=Path(""))
+def test_save_configuration(tmp_path):
+    client = zebr0.Client("http://127.0.0.1:8000", levels=["lorem", "ipsum"], cache=1, configuration_file=Path(""))
 
-        configuration_file = Path(tmp).joinpath("zebr0.conf")
-        client.save_configuration(configuration_file)
+    configuration_file = tmp_path.joinpath("zebr0.conf")
+    client.save_configuration(configuration_file)
 
-        assert configuration_file.read_text(zebr0.ENCODING) == '{"url": "http://127.0.0.1:8000", "levels": ["lorem", "ipsum"], "cache": 1}'
+    assert configuration_file.read_text(zebr0.ENCODING) == '{"url": "http://127.0.0.1:8000", "levels": ["lorem", "ipsum"], "cache": 1}'

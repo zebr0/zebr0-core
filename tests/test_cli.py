@@ -1,6 +1,4 @@
-import pathlib
 import subprocess
-import tempfile
 
 import pytest
 
@@ -23,18 +21,16 @@ def run(command):
     return stdout
 
 
-def test_with_defaults(server):
-    with tempfile.TemporaryDirectory() as tmp:
-        file = pathlib.Path(tmp + "/zebr0.conf")
+def test_with_defaults(tmp_path):
+    file = tmp_path.joinpath("zebr0.conf")
 
-        assert run("./zebr0-setup --configuration-file {}".format(file)) == ""
-        assert file.read_text(zebr0.ENCODING) == '{"url": "https://hub.zebr0.io", "levels": [], "cache": 300}'
+    assert run(f"./zebr0-setup --configuration-file {file}") == ""
+    assert file.read_text(zebr0.ENCODING) == '{"url": "https://hub.zebr0.io", "levels": [], "cache": 300}'
 
 
-def test_nominal(server):
-    with tempfile.TemporaryDirectory() as tmp:
-        server.data = {"lorem/ipsum/key": "value"}
-        file = pathlib.Path(tmp + "/zebr0.conf")
+def test_nominal(server, tmp_path):
+    server.data = {"lorem/ipsum/key": "value"}
+    file = tmp_path.joinpath("zebr0.conf")
 
-        assert run("./zebr0-setup --url http://localhost:8000 --levels lorem ipsum --cache 1 --configuration-file {} --test key".format(file)) == "value"
-        assert file.read_text(zebr0.ENCODING) == '{"url": "http://localhost:8000", "levels": ["lorem", "ipsum"], "cache": 1}'
+    assert run(f"./zebr0-setup --url http://localhost:8000 --levels lorem ipsum --cache 1 --configuration-file {file} --test key") == "value"
+    assert file.read_text(zebr0.ENCODING) == '{"url": "http://localhost:8000", "levels": ["lorem", "ipsum"], "cache": 1}'
