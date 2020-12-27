@@ -217,7 +217,7 @@ def build_argument_parser(*args: Any, **kwargs: Any) -> argparse.ArgumentParser:
     return argparser
 
 
-def main(args: Optional[List[str]] = None):
+def main(args: Optional[List[str]] = None) -> None:
     """
     usage: zebr0-setup [-h] [-u <url>] [-l [<level> [<level> ...]]] [-c <duration>] [-f <path>] [-t <key>]
 
