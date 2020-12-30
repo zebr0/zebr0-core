@@ -1,3 +1,9 @@
+zebr0 (0.13.0) focal; urgency=medium
+
+  * added read filter to read the content of a file
+
+ -- Thomas JOUANNOT (Mazerty) <mazerty@gmail.com>  Fri, 30 Dec 2020 18:50:00 +0100
+
 zebr0 (0.12.0) focal; urgency=medium
 
   * using tmp_path fixture and f-strings
