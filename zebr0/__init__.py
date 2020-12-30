@@ -36,14 +36,14 @@ class Client:
     Note that you don't have to duplicate keys for each project and environment, as they can be inherited from their parent level.
 
     Templating:
-    You can use the double-braces {{  }} in your values to benefit from the Jinja templating engine (to some extent).
-    For now you can refer to the constructor parameters {{ url }} and {{ levels[x] }} or include the value from another key {{ "another-key" | get }}.
+    You can use the double-braces {{  }} in your values to benefit from the Jinja templating engine.
+    You can refer to the constructor parameters {{ url }} and {{ levels[x] }}, include the value from another key {{ "another-key" | get }} or the content of a file {{ "/path/to/the/file" | read }}.
 
     Configuration file:
     Client configuration can also be read from a JSON file, a simple dictionary with the "url", "levels" and "cache" keys.
     The save_configuration() function can help you create one from an existing Client.
     The suggested default path can be used for a system-wide configuration.
-    If provided, constructor parameters will always supercede the values from the configuration file, which in turn supercede the default values.
+    If provided, constructor parameters will always supersede the values from the configuration file, which in turn supersede the default values.
 
     Note that the inheritance and templating mechanisms are performed by the client, to be as server-agnostic as possible.
 
@@ -83,6 +83,7 @@ class Client:
         self.jinja_environment.globals[URL] = self.url
         self.jinja_environment.globals[LEVELS] = self.levels
         self.jinja_environment.filters["get"] = self.get
+        self.jinja_environment.filters["read"] = read
 
         # http requests setup
         self.http_session = requests_cache.CachedSession(backend="memory", expire_after=cache)
@@ -193,6 +194,19 @@ class TestServer:
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         """ When used as a context manager, stops the server at the end of the "with" block. """
         self.stop()
+
+
+def read(path: str, encoding: str = ENCODING) -> str:
+    """
+    Filter for the Jinja templating engine, that allows to read a file's content.
+
+    :param path: path to the file
+    :param encoding: encoding of the file, defaults to "utf-8"
+    :return: the content of the file
+    """
+
+    path = Path(path)
+    return path.read_text(encoding=encoding) if path.is_file() else ""
 
 
 def build_argument_parser(*args: Any, **kwargs: Any) -> argparse.ArgumentParser:

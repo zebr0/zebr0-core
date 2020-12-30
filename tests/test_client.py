@@ -100,6 +100,22 @@ def test_render_with_default(server):
     assert client.get("template") == "default"
 
 
+def test_read_ok(tmp_path, server):
+    file = tmp_path.joinpath("file")
+    file.write_text("content")
+    server.data = {"template": "{{ '" + str(file) + "' | read }}"}
+    client = zebr0.Client("http://127.0.0.1:8000", configuration_file=Path(""))
+
+    assert client.get("template") == "content"
+
+
+def test_read_ko(tmp_path, server):
+    server.data = {"template": "{{ '" + str(tmp_path.joinpath("unknown_file")) + "' | read }}"}
+    client = zebr0.Client("http://127.0.0.1:8000", configuration_file=Path(""))
+
+    assert client.get("template") == ""
+
+
 def test_cache(server):
     server.access_logs = []  # resetting server logs from previous tests
 
